@@ -66,3 +66,133 @@ HTML の img タグの拡張版で手動で行っていた項目を自動で行�
 
 4. **遅延読み込み（Lazy loading）の実装**
    デフォルトで遅延読み込みを行うので、パフォーマンスが向上する。
+
+## Chapter 4 - Creating Layouts and Pages -
+
+### ルーティングの方法
+
+app ディレクトリ配下にディレクトリを作り、page.tsx ファイルを設置する。
+例えば、app/dashboard/page.tsx にアクセスする URL は https://localhost:8080/dashboard になる
+
+### 特別なファイル
+
+#### layout.tsx
+
+複数のファイルで共有される UI を表すファイル
+layout.tsx が存在する同階層とその下の階層のファイルを Children として受け取る
+
+### page.tsx
+
+## Chapter 5 - Navigating Between Pages -
+
+### Link コンポーネント
+
+HTML の a タグの代わりに Link コンポーネントを使用する。
+クライアントサイドナビゲーションによってページ遷移する。
+
+#### クライアントサイドナビゲーション
+
+- Link コンポーネントを使用する
+- 必要な JS ファイルやデータだけを取得し、ページの変更箇所だけを更新するので、高速
+  - ネットワーク通信量が少ない
+  - ページ全体のロードをしないので動作がスムーズ
+- JavaScript を利用してページ遷移を行う
+
+#### サーバサイドナビゲーション
+
+- a タグを使用する
+- ページ遷移時、サーバ側にリクエストを送信する
+- レンダリング済みのページが返ってくるので、それを表示する
+  - ページ全体が再読み込みされるため、少し遅く感じる
+
+#### コード分割
+
+Next.js ではビルド時にページ単位で固有の JS ファイルにバンドルを行う。
+このようにすることで、大規模なアプリだとしても初回ロードに時間がかかりすぎない
+
+#### プリフェッチング
+
+ユーザのスクロールなどにより、リンクが画面内に見える位置になった、または近づいた場合にリンク先のページをバックグラウンドで取得する仕組み
+Intersection Observer API を活用して画面の動きを監視している
+取得されたファイルはブラウザや Next.js のキャッシュに保存され、リンクがクリックされると取得される。
+
+#### まとめ
+
+1. ビルドするとページ単位でコード分割されて JS ファイルにバンドルされる
+2. 初回ロード時には表示されるページしかフェッチされない
+3. ユーザがスクロールし、リンクが近くなると、バックグラウンドでリンク先のページをプリフェッチし、キャッシュに保存する
+4. ユーザがリンクを押下すると、キャッシュからページを取得し、表示する
+
+### アクティブリンク
+
+アクティブリンク ... タブに複数の項目がある場合などに、現在アクセスしている項目を分かりやすく色付けするもの
+
+usePathname() ... 現在の URL を返す hooks。https://example.com/about にアクセスすると /about を返す
+
+#### Client Component
+
+- 動作
+  - ブラウザ上で実行されるコンポーネント
+- 特徴
+  - JS を利用してインタラクティブな要素（ボタンのクリックやフォーム入力など）を実現する
+  - 状態管理やイベントハンドラに対応（useState などの hooks、window オブジェクトなど）
+  - 必要に応じてサーバからデータを取得し、クライアントサイドでデータを処理
+
+```jsx
+"use client";
+import { useState } from "react";
+
+export default function Counter() {
+  const [count, setCount] = useState(0);
+
+  return <button onClick={() => setCount(count + 1)}>Count: {count}</button>;
+}
+```
+
+#### Server Component
+
+- 動作
+  - サーバ上で実行されるコンポーネント
+- 特徴
+  - サーバ上で JS を実行し、静的な HTML を生成
+  - 高速な初期レンダリングと SEO に適している
+  - 状態管理やブラウザ固有の API（例: `window` や `useEffect`）は使用できない。
+
+```jsx
+export default async function UserList() {
+  const res = await fetch("https://api.example.com/users");
+  const users = await res.json();
+
+  return (
+    <ul>
+      {users.map((user) => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+Server コンポーネントによって軽量で効率的な初期レンダリングを提供し、必要な部分だけを Client コンポーネントでインタラクティブにするのがベストプラクティス
+
+## Chapter 6 - -
+
+## Chapter 7 - -
+
+## Chapter 8 - -
+
+## Chapter 9 - -
+
+## Chapter 10 - -
+
+## Chapter 11 - -
+
+## Chapter 12 - -
+
+## Chapter 13 - -
+
+## Chapter 14 - -
+
+## Chapter 15 - -
+
+## Chapter 16 - -
