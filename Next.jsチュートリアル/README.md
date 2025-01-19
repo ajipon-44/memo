@@ -175,11 +175,34 @@ export default async function UserList() {
 
 Server コンポーネントによって軽量で効率的な初期レンダリングを提供し、必要な部分だけを Client コンポーネントでインタラクティブにするのがベストプラクティス
 
-## Chapter 6 - -
+## Chapter 6 - Setting Up Your Database -
 
-## Chapter 7 - -
+省略
 
-## Chapter 8 - -
+## Chapter 7 - Fetching Data -
+
+Server Component によって、サーバ上から DB に問い合わせをできるため、ロジックを持つことができ、結果だけをクライアント側に送ることができる
+
+### 並列データフェッチ
+
+Promise.all や Promise.allSettled を使うことで、全てのプロミスを同時に開始することができる
+
+```javascript
+const data = await Promise.all([
+  invoiceCountPromise,
+  customerCountPromise,
+  invoiceStatusPromise,
+]);
+```
+
+メリット
+
+- 各リクエストの完了を待たずにフェッチできるので、高速化が図れる
+- ネイティブな JS なので、どんなライブラリにも対応できる
+
+デメリットは次章で解説
+
+## Chapter 8 - Static and Dynamic Rendering -
 
 ## Chapter 9 - -
 
