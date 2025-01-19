@@ -208,3 +208,89 @@ let b = 0; // letはundefinedによる初期化を行わない
 console.log(c); // 初期化していないエラーになる
 const c = 0; // constはundefinedによる初期化を行わない
 ```
+
+## スコープ
+
+実行中のコードから値と式が参照できる範囲
+
+### レキシカルスコープ
+
+コードを書く場所によって参照できる変数が変わるスコープ、スコープの外側のこと
+コードを記述した時点で決定するため、静的スコープともいう
+
+```javascript
+let a = 2;
+function fn1() {
+  let b = 1;
+  function fn2() {
+    let c = 3;
+  }
+  fn2();
+}
+fn1();
+```
+
+グローバルスコープ ... a, fn1
+関数スコープ（fn1）... b, fn2
+関数スコープ（fn2） ... c
+
+それぞれのスコープでは外側のものは参照可能
+近いスコープから表示される
+
+```javascript
+let a = 2;
+function fn1() {
+  let a = 1;
+  function fn2() {
+    let a = 3; // ここをコメントアウトするとaは1になる
+    console.log(a); // 3
+  }
+}
+```
+
+## クロージャー
+
+レキシカルスコープの変数を関数が使用している状態
+
+### プライベート変数
+
+```javascript
+function incrementFactory() {
+  let a = 0; // これがプライベート変数になる
+
+  function increment() {
+    a += a + 1;
+  }
+  return increment;
+}
+
+const increment = incrementFactory();
+increment();
+```
+
+### 動的な関数の生成
+
+```javascript
+function addNubmerFactory(num) {
+  function addNumber(value) {
+    return num + value;
+  }
+  return addNumber;
+}
+
+const add5 = addNumberFactory(5);
+const result = add5(10);
+console.log(result); // 15
+```
+
+## 即時関数 (IIFE)
+
+関数定義と同時に一度だけ実行される関数
+
+```javascript
+// 実引数に入れた値が引数となって、実行される。returnの結果はresultに入る
+// 無名関数の場合は関数を()で囲う、関数式の場合はいらない
+let result = (function (仮引数) {
+  return 戻り値;
+})(実引数);
+```
