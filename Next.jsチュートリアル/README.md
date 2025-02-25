@@ -308,7 +308,66 @@ Next.js はディレクトリ構造が URL になるが、URL に影響を与え
 
 ## Chapter 10 - Partial Prerendering -
 
-## Chapter 11 - -
+### Partial Prerendering（PPR、部分プリレンダリング）とは
+
+同じ URL で静的レンダリングと動的レンダリングを組み合わせることができる仕組み
+
+**ページの一部だけを事前に作っておいて、残りは後から動的に表示する仕組み**
+これにより、**ページの表示を速くしつつ、最新のデータも取得できる**ようになります。
+
+### PPR の仕組み
+
+静的な部分はビルド時に HTML にしておく。
+
+Suspense を利用して、条件が満たされるまで（例えばデータの取得など）画面の一部をフォールバックなどを表示して、レンダリングを延期させる。（Suspense を使用することで、Next.js がどこが動的なページか分かるようになる）
+
+データの取得が完了したら、ページの動的な部分だけをレンダリングし、クライアントサイドで更新処理をする。
+
+### 実装
+
+next.config.ts に PPR に関する記載をする
+
+```typescript
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  experimental: {
+    // incremental は特定のルートにのみ PPR を適用させる
+    ppr: "incremental",
+  },
+};
+
+export default nextConfig;
+```
+
+### 注意点
+
+サーバコンポーネントでフェッチするときに PPR を使うべきではない
+サーバコンポーネントはデータの取得が完了してから、クライアントサイドにページを送信するので、データの取得が終わるまで、静的な部分もクライアント側に送信できない。
+
+## Chapter 11 - Adding Search and Pagination -
+
+### 検索
+
+検索に URL パラメータを使う理由
+
+1. ブックマークでき、共有できる
+2. どの URL が多く叩かれているかが分かるため、ユーザがどの検索を多く使うのかなどのトラッキングができる
+
+#### 実装
+
+使う Hooks
+
+- useSearchParams ... 現在のクエリパラメータを読み取れる。/dashboard/invoices?page=1&query=pending だったら ? 以降
+- usePathName ... パスを返す。/dashboard/invoices?page=1&query=pending だったら /dashboard/invoices
+- useRouter ... ページ遷移などに使われる。
+
+実装ステップ
+
+1. ユーザーの入力をキャプチャする。
+2. URL を検索パラメータで更新する。
+3. URL を入力フィールドと同期させておく。
+4. 検索クエリを反映させるためにテーブルを更新する。
 
 ## Chapter 12 - -
 
