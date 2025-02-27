@@ -450,6 +450,55 @@ export default function Search({ placeholder }: { placeholder: string }) {
   }, 300);
 ```
 
+### ページネーション
+
+#### 実装
+
+1. URL からパス名を取得、useSearchParams を使用して、現在のページ番号を取得
+
+```jsx
+const pathname = usePathname();
+const searchParams = useSearchParams();
+const currentPage = Number(searchParams.get("page")) || 1;
+```
+
+2. URL を作成する
+
+```jsx
+const createPageURL = (pageNumber: number | string) => {
+  const params = new URLSearchParams(searchParams);
+  params.set("page", pageNumber.toString());
+  return `${pathname}?${params.toString()}`;
+};
+```
+
+※useSearchParams に関する補足
+
+| 変数名       | 役割                                                                                                          | 取得元                | 変更可否      | メソッド                                                                                   |
+| ------------ | ------------------------------------------------------------------------------------------------------------- | --------------------- | ------------- | ------------------------------------------------------------------------------------------ |
+| searchParams | 現在のクエリパラメータを取得<br />useState の getter のようなもの                                             | useSearchParams()     | ❌ (変更不可) | .getter                                                                                    |
+| params       | searchParams をコピーし、編集可能にしたもの<br />useState の setter のようなものだが、getter 関数も持っている | new URLSearchParams() | ✅ (変更可)   | .getter : 取得<br />.setter : 置き換え<br />.append : パラメータの追加<br />.delete : 削除 |
+
+以下のようにも宣言できたが、意図的にしなかったと思われる。
+
+```jsx
+const [searchParams, setSearchParams] = useSearchParams();
+```
+
+- 意図
+  - 関数内だけでしか set を使わないので get しか宣言しなかった。
+  - 関数内でクエリパラメータを変更するということを明確化したかった。
+
+3. ページネーションのリンクに作成した URL を入れ込む
+
+```jsx
+<PaginationArrow
+  direction="left"
+  href={createPageURL(currentPage - 1)}
+  isDisabled={currentPage <= 1}
+/>
+```
+
 ## Chapter 12 - -
 
 ## Chapter 13 - -
