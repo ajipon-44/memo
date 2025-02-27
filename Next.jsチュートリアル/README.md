@@ -362,12 +362,93 @@ export default nextConfig;
 - usePathName ... パスを返す。/dashboard/invoices?page=1&query=pending だったら /dashboard/invoices
 - useRouter ... ページ遷移などに使われる。
 
-実装ステップ
+#### 実装ステップ
 
-1. ユーザーの入力をキャプチャする。
-2. URL を検索パラメータで更新する。
-3. URL を入力フィールドと同期させておく。
-4. 検索クエリを反映させるためにテーブルを更新する。
+1. ユーザーの入力をキャプチャする、クライアントコンポーネントでユーザの入力をキャッチする
+
+```jsx
+<input
+  className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
+  placeholder={placeholder}
+  onChange={(e) => {
+    handleSearch(e.target.value);
+  }}
+/>
+```
+
+2. URL を検索パラメータで更新する。フォームを入力すると URL のクエリパラメータが書き換わる。
+
+```jsx
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+
+export default function Search({ placeholder }: { placeholder: string }) {
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter();
+
+  function handleSearch(term: string) {
+    const params = new URLSearchParams(searchParams);
+    if (term) {
+      params.set("query", term);
+    } else {
+      params.delete("query");
+    }
+    replace(`${pathname}?${params.toString()}`);
+  }
+  // 省略
+}
+```
+
+3. URL のクエリパラメータと入力フォーム内の文字列を同期させる。
+
+```jsx
+<input
+  className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500"
+  placeholder={placeholder}
+  onChange={(e) => {
+    handleSearch(e.target.value);
+  }}
+  defaultValue={searchParams.get("query")?.toString()} // ここを追加
+/>
+```
+
+4. 入力フォームに文字列を入れると、検索クエリが変わり、サーバ上にデータをフェッチしに行き、テーブルを更新する。
+
+### デバウンス
+
+関数が起動する時間を制限する手法。これによりユーザが動きを止めた時だけ、DB に問い合わせることができる。
+上の実装方法では、ユーザがキーを打つたびに DB にクエリを投げているのでパフォーマンスが悪い
+
+1. デバウンスの対象となるイベント（キーの入力など）が発生すると、タイマーが起動する
+2. タイマーが起動している間に、再度イベントが起こるとタイマーがリセットされる
+3. タイマーが 0 になると関数が実行される
+
+#### 実装
+
+1. ライブラリをインストール
+
+```shell
+pnpm i use-debounce
+```
+
+2. useDebouncedCallback を使う、下の例だとタイマーが 300ms
+
+```jsx
+import { useDebouncedCallback } from "use-debounce";
+
+export default function Search({ placeholder }: { placeholder: string }) {
+  const handleSearch = useDebouncedCallback((term) => {
+    console.log(`Searching... ${term}`);
+
+    const params = new URLSearchParams(searchParams);
+    if (term) {
+      params.set("query", term);
+    } else {
+      params.delete("query");
+    }
+    replace(`${pathname}?${params.toString()}`);
+  }, 300);
+```
 
 ## Chapter 12 - -
 
