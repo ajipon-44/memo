@@ -499,12 +499,153 @@ const [searchParams, setSearchParams] = useSearchParams();
 />
 ```
 
-## Chapter 12 - -
+## Chapter 12 - Mutating Data -
 
-## Chapter 13 - -
+### Server Actions とは
 
-## Chapter 14 - -
+非同期コードなどデータ処理やロジックをサーバ上で実行する仕組み。
 
-## Chapter 15 - -
+メリット
 
-## Chapter 16 - -
+✅ **サーバー上で実行** されるため、ブラウザの JavaScript が無効でも動作する
+✅ **クライアントに処理負担をかけず** にデータの取得・変更ができる
+✅ **ネットワークが不安定でも** リクエストを送れれば処理が完了する
+✅ **機密情報を安全に処理**（例: データベースの操作や認証）
+
+#### 作り方
+
+ファイル内で "use server" を宣言し、中で関数を定義する
+
+```ts
+"use server";
+
+export async function createInvoice(formData: FormData) {
+  const rawFormData = {
+    customerId: formData.get("customerId"),
+    amount: formData.get("amount"),
+    status: formData.get("status"),
+  };
+
+  console.log(rawFormData); // サーバーで実行される
+}
+```
+
+ファイル内の関数をクライアントコンポーネントやサーバーコンポーネントにインポートして使用する。
+使われない関数はバンドル時に削除される。
+
+クライアントコンポーネントでの使用例：
+
+```tsx
+import { createInvoice } from "@/app/lib/actions";
+
+export default function Form() {
+  // action={createInvoice} でフォームの送信時に createInvoice が 自動で FormData を受け取る
+  // ここに設定する関数は FormData を引数に取る関数である必要がある
+  return <form action={createInvoice}>...</form>;
+}
+```
+
+#### form の action 属性 (※Next.js の場合は拡張されて、関数も指定できるようになっている)
+
+**通常の HTML の `form` の `action` の役割：**
+
+- `action` に指定した URL へフォームデータを送信する。
+- `method="POST"` ならば、フォームのデータを HTTP リクエストのボディとして送信する。
+- `method="GET"` ならば、フォームのデータを URL クエリパラメータとして送信する。
+
+```html
+<form action="/submit" method="POST">
+  <input type="text" name="username" />
+  <button type="submit">送信</button>
+</form>
+```
+
+#### 引数を入れたいとき
+
+bind 関数を使用する
+
+```tsx
+  // updateInvoice(id: string, formData: FormData)
+  const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
+  return (
+    <form action={updateInvoiceWithId}>
+```
+
+### Revalidate and redirect
+
+Next.js では、ルートセグメントをブラウザにキャッシュするクライアントサイドルーターキャッシュがある。
+クライアントサイドルーターキャッシュは UI とデータをキャッシュしている。
+
+✅ **プリフェッチ**（事前取得）と組み合わせて、ページ遷移を高速化
+✅ **ブラウザにキャッシュされたデータを使い、リクエスト数を減らす**
+
+```
+/app
+  ├── page.tsx        ← `/` のルートセグメント
+  ├── dashboard
+  │   ├── page.tsx    ← `/dashboard` のルートセグメント
+  │   ├── invoices
+  │   │   ├── page.tsx  ← `/dashboard/invoices` のルートセグメント
+```
+
+### キャッシュのクリア
+
+クライアントサイドルーターキャッシュのデータをクリアするときに使うのが **revalidatePath("/pathname")**
+
+```ts
+import { revalidatePath } from "next/cache";
+
+export async function updateInvoice(formData: FormData) {
+  // データを更新する処理
+  await db.updateInvoice(formData);
+
+  // `/dashboard/invoices` のキャッシュを削除し、最新のデータを取得
+  revalidatePath("/dashboard/invoices");
+}
+```
+
+**UI も更新** したいなら、ページごとキャッシュを無効化する `revalidateTag()` や `revalidatePath()`なども使う。
+
+### 編集ページ
+
+```tsx
+// /app/dashboard/invoices/[id]/edit/page.tsx
+import Form from "@/app/ui/invoices/edit-form";
+import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
+import { fetchInvoiceById, fetchCustomers } from "@/app/lib/data";
+
+// page.tsxのpropsは特別で、URLのパスパラメータやクエリパラメータなどが入っている
+export default async function Page(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const id = params.id;
+  // SSRなので、awaitが直接使え、レンダリングされると実行される
+  const [invoice, customers] = await Promise.all([
+    fetchInvoiceById(id),
+    fetchCustomers(),
+  ]);
+
+  return (
+    <main>
+      <Breadcrumbs
+        breadcrumbs={[
+          { label: "Invoices", href: "/dashboard/invoices" },
+          {
+            label: "Edit Invoice",
+            href: `/dashboard/invoices/${id}/edit`,
+            active: true,
+          },
+        ]}
+      />
+      <Form invoice={invoice} customers={customers} />
+    </main>
+  );
+}
+```
+
+## Chapter 13 - Handling Errors -
+
+## Chapter 14 - Improving Accessibility -
+
+## Chapter 15 - Adding Authentication -
+
+## Chapter 16 - Adding Metadata -
