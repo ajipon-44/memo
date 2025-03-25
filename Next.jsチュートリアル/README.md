@@ -642,7 +642,82 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 }
 ```
 
+### キャッシュ戦略
+
+Next.js には DB に近い順から以下の 4 つのキャッシュが存在する
+
+| メカニズム                                                                                               | 内容                 | 保存場所 | 目的                                            | 期間                            |
+| -------------------------------------------------------------------------------------------------------- | -------------------- | -------- | ----------------------------------------------- | ------------------------------- |
+| [Data Cache](https://nextjs.org/docs/app/building-your-application/caching#data-cache)                   | Data                 | サーバ   | Store data across user requests and deployments | Persistent (can be revalidated) |
+| [Request Memoization](https://nextjs.org/docs/app/building-your-application/caching#request-memoization) | 関数の戻り値         | サーバ   | Re-use data in a React Component tree           | Per-request lifecycle           |
+| [Full Route Cache](https://nextjs.org/docs/app/building-your-application/caching#full-route-cache)       | HTML and RSC payload | サーバ   | Reduce rendering cost and improve performance   | Persistent (can be revalidated) |
+| [Router Cache](https://nextjs.org/docs/app/building-your-application/caching#client-side-router-cache)   | RSC Payload          | ブラウザ | Reduce server requests on navigation            | User session or time-based      |
+
+<img src="/Users/yanaikeigo/Library/Application Support/typora-user-images/スクリーンショット 2025-03-16 19.20.03.png" alt="スクリーンショット 2025-03-16 19.20.03" style="zoom:40%;" />
+
+#### Data Cache
+
+#### Request Memoization
+
+リクエストをメモ化する機能。同じ URL とオプション
+
+#### Full Route Cache
+
+#### Router Cache
+
+ゆくゆく追記する
+
 ## Chapter 13 - Handling Errors -
+
+### try-catch
+
+Server Actions で try catch を使ってエラーハンドリングをする。
+
+```ts
+export async function createInvoice(formData: FormData) {
+  const { customerId, amount, status } = CreateInvoice.parse({
+    customerId: formData.get("customerId"),
+    amount: formData.get("amount"),
+    status: formData.get("status"),
+  });
+  const amountInCents = amount * 100;
+  const date = new Date().toISOString().split("T")[0];
+
+  try {
+    await sql`
+    INSERT INTO invoices (customer_id, amount, status, date)
+    VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+    `;
+  } catch (error) {
+    console.error(error);
+  }
+
+  revalidatePath("/dashboard/invoices");
+  redirect("/dashboard/invoices");
+}
+```
+
+### error.tsx
+
+1. コンポーネント内でエラーが発生
+
+2. エラーが発生したコンポーネントを含む DOM ツリーが破棄される
+
+3. 最も近い error.tsx に置き換えられる。
+
+   - `app/error.tsx` があれば全体適用
+
+   - `app/dashboard/error.tsx` なら `dashboard/` 配下のエラーだけ適用
+
+4. **`reset()` を呼ぶとエラーリカバリを試みる**
+
+   - コンポーネントが再レンダリングされ、エラーが解消されれば通常の UI に戻る
+
+### 404 Page
+
+not-found.tsx というファイルを作る。
+
+next/navigation の notFound 関数を叩くと 404 ページに遷移する
 
 ## Chapter 14 - Improving Accessibility -
 
