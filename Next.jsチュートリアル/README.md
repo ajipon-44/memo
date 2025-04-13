@@ -474,10 +474,10 @@ const createPageURL = (pageNumber: number | string) => {
 
 ※useSearchParams に関する補足
 
-| 変数名       | 役割                                                                                                          | 取得元                | 変更可否      | メソッド                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------- | --------------------- | ------------- | ------------------------------------------------------------------------------------------ |
-| searchParams | 現在のクエリパラメータを取得<br />useState の getter のようなもの                                             | useSearchParams()     | ❌ (変更不可) | .getter                                                                                    |
-| params       | searchParams をコピーし、編集可能にしたもの<br />useState の setter のようなものだが、getter 関数も持っている | new URLSearchParams() | ✅ (変更可)   | .getter : 取得<br />.setter : 置き換え<br />.append : パラメータの追加<br />.delete : 削除 |
+| 変数名       | 役割                                                                                                          | 取得元                | 変更可否      | メソッド                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------- | --------------------- | ------------- | ------------------------------------------------------------------------------------------------ |
+| searchParams | 現在のクエリパラメータを取得<br />useState の getter のようなもの                                             | useSearchParams()     | ❌ (変更不可) | .getter                                                                                          |
+| params       | searchParams をコピーし、編集可能にしたもの<br />useState の setter のようなものだが、getter 関数も持っている | new URLSearchParams() | ✅ (変更可)   | .getter : 取得<br />.setter : 置き換え<br />.append : 新しいパラメータの追加<br />.delete : 削除 |
 
 以下のようにも宣言できたが、意図的にしなかったと思われる。
 
@@ -720,6 +720,37 @@ not-found.tsx というファイルを作る。
 next/navigation の notFound 関数を叩くと 404 ページに遷移する
 
 ## Chapter 14 - Improving Accessibility -
+
+### アクセシビリティとは
+
+個人の特性によらず、キーボードナビゲーション、セマンテック HTML(input タグなど)、画像、色、動画などが利用できること。
+
+### next lint
+
+Next.js の Linter
+
+Next.js の文法エラーや型の安全性だけでなく、画像の alt テキストや aria 属性など a11y (accesibility) に関するチェックを行う
+
+### useActionState
+
+クライアントコンポーネントで利用できる Hooks
+
+第一引数 ... アクション、関数
+第二引数 ... 初期状態
+
+返り値 1 ... フォームの状態
+返り値 2 ... フォームが送信されるときに実行する関数
+
+```tsx
+"use client";
+import { useActionState } from "react";
+
+export default function Form({ customers }: { customers: CustomerField[] }) {
+  const [state, formAction] = useActionState(createInvoice, initialState);
+
+  return <form action={formAction}>...</form>;
+}
+```
 
 ## Chapter 15 - Adding Authentication -
 
