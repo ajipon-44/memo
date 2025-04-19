@@ -754,4 +754,86 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
 
 ## Chapter 15 - Adding Authentication -
 
+### pages オプション
+
+サインイン、サインアウトなどのページの URL をカスタマイズできる。
+Auth.js が用意したデフォルトのものではなく、自分がデザインしたものを使う場合に設定する。
+
+```ts
+import type { NextAuthConfig } from "next-auth";
+
+export const authConfig = {
+  pages: {
+    // signIn() 関数が呼ばれたときに、/login に飛ばしてくれる
+    signIn: "/login",
+  },
+  providers: [],
+} satisfies NextAuthConfig;
+```
+
+### callback オプション
+
+#### authorized
+
+ページにアクセスすることが許可されているかを確認する
+
+```ts
+import type { NextAuthConfig } from "next-auth";
+
+export const authConfig = {
+  pages: {
+    signIn: "/login",
+  },
+  callbacks: {
+    authorized({ auth, request: { nextUrl } }) {
+      const isLoggedIn = !!auth?.user;
+      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
+      if (isOnDashboard) {
+        if (isLoggedIn) return true;
+        return false;
+      } else if (isLoggedIn) {
+        return Response.redirect(new URL("/dashboard", nextUrl));
+      }
+      return true;
+    },
+  },
+  providers: [],
+} satisfies NextAuthConfig;
+```
+
+### middleware
+
+毎リクエストの前に行われる処理を定義する
+config.matcher ... どの URL にマッチしたときに行うかの定義
+export default 関数名 ... 関数を export すると Next.js が毎リクエストで行ってほしい処理だと認識してくれる
+
+```ts
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
+
+export default NextAuth(authConfig).auth;
+
+// config は設定ではなく、Next.jsミドルウェアの適用指示
+export const config = {
+  // https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
+  matcher: ["/((?!api|_next/static|_next/image|.*\\.png$).*)"],
+};
+```
+
+### provider
+
+Google や Github などのログインプションを設定する
+
+```ts
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
+// Credential を指定するとIDとパスワードでのログインになる
+import Credentials from "next-auth/providers/credentials";
+
+export const { auth, signIn, signOut } = NextAuth({
+  ...authConfig,
+  providers: [Credentials({})],
+});
+```
+
 ## Chapter 16 - Adding Metadata -
