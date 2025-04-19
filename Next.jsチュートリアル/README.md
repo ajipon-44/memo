@@ -837,3 +837,95 @@ export const { auth, signIn, signOut } = NextAuth({
 ```
 
 ## Chapter 16 - Adding Metadata -
+
+### メタデータとは
+
+Web ページに関する情報（内容や目的など）を、検索エンジンなどの外部サービスに伝えるもの。
+特に、検索エンジンや SNS、ブラウザなどに向けた指示・説明の役割を果たす。
+
+### 主な用途
+
+| 目的                        | 説明                                                        |
+| --------------------------- | ----------------------------------------------------------- |
+| 検索エンジンの最適化（SEO） | meta name="description"などを使って、ページの内容を説明する |
+| SNS での表示最適化          | og:title, og:image（ Open Graph）や twitter:card など       |
+| ブラウザ挙動の制御          | viewport, charset などにより、表示や文字コードの制御をする  |
+
+### 主なメタデータ
+
+#### Title
+
+ブラウザのタブに表示されるもの。検索エンジンがページの内容を把握するためのものであり、SEO に欠かせない。
+
+```tsx
+<title>Page Title</title>
+```
+
+#### description
+
+ページの簡単な概要。検索エンジンの検索結果ページに表示されるため、クリック率にも影響する。
+
+```tsx
+<meta name="description" content="A brief description of the page content." />
+```
+
+#### Keyword
+
+コンテンツに関するキーワードを列挙するもの。
+かつては SEO に使用されていたが、現在の検索エンジン（例：Google）では評価対象になっていない。
+
+```tsx
+<meta name="keywords" content="keyword1, keyword2, keyword3" />
+```
+
+#### Open Graph
+
+SNS などでリンクを貼った際の、タイトル、説明文、プレビュー画像などの見え方を表す。
+
+```tsx
+<meta property="og:title" content="Title Here" />
+<meta property="og:description" content="Description Here" />
+<meta property="og:image" content="image_url_here" />
+```
+
+#### favicon
+
+ブラウザのタブやブックマークバーに表示される画像
+
+```tsx
+<link rel="icon" href="path/to/favicon.ico" />
+```
+
+### メタデータの自動登録
+
+app ルータ利用時に app/ 配下に以下のようなファイルを置くと自動的にメタデータとして認識してくれる
+
+| ファイル名           | 自動的に使われる意味                     |
+| -------------------- | ---------------------------------------- |
+| favicon.ico          | <link rel="icon"> として <head> に挿入   |
+| opengraph-image.jpg  | <meta property="og:image"> に使用される  |
+| apple-touch-icon.png | モバイル端末用のアイコンとして使用される |
+
+### 実装
+
+```tsx
+// app/layout.tsx
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: {
+    template: "%s | Acme Dashboard",
+    default: "Acme Dashboard",
+  },
+  description: "The official Next.js Learn Dashboard built with App Router.",
+  metadataBase: new URL("https://next-learn-dashboard.vercel.sh"),
+};
+```
+
+```tsx
+// app/dashboard/invoices/page.tsx
+export const metadata: Metadata = {
+  // タブに「Invoices | Acme Dashboard」と表示される
+  title: "Invoices",
+};
+```
