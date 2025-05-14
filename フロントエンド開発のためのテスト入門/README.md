@@ -91,3 +91,155 @@ Web フロントエンドテストでは以下の 3 つが代表的。
 
 単体テスト > 結合テスト > E2E テスト で項目数が多くなるように心がける
 理由はテストにかかるコストは E2E テストが１番重いから
+
+## 第３章 はじめての単体テスト
+
+### テストの作成
+
+- test 関数
+  - 第一引数
+    - テストタイトル ... テストの内容を表す文字列
+  - 第二引数
+    - テスト関数 ... アサーション（検証ちが期待通りか確認する関数）
+      - アサーション ... expect(検証値).toBe(期待値)
+      - マッチャー ... toBe(期待値)
+
+```ts
+test("1 + 2 = 3", () => {
+  expect(add(1, 2)).toBe(3);
+});
+```
+
+### テストグループの作成
+
+関連するいくつかのテストを describe によってグルーピングする。
+describe(グループタイトル, グループ関数)
+
+```ts
+describe("add", () => {
+  test("1 + 1 = 2", () => {
+    expect(add(1, 1)).toBe(2);
+  });
+  test("1 + 2 = 3", () => {
+    expect(add(1, 2)).toBe(3);
+  });
+});
+```
+
+test 関数はネストできないが、describe 関数はネストできる
+
+```ts
+describe("四則演算", () => {
+  describe("add", () => {
+    test("1 + 1 = 2", () => {
+      expect(add(1, 1)).toBe(2);
+    });
+    test("1 + 2 = 3", () => {
+      expect(add(1, 2)).toBe(3);
+    });
+  });
+  describe("sub", () => {
+    test("1 - 1 = 0", () => {
+      expect(sub(1, 1)).toBe(0);
+    });
+    test("2 - 1 = 1", () => {
+      expect(sub(2, 1)).toBe(1);
+    });
+  });
+});
+```
+
+### テストの実行
+
+```ts
+// 全てのテストを実行
+npm test
+
+// 特定のテストを実行
+npm test ディレクトリ名
+
+// VSCodeの拡張機能「Jest Runner」を使う
+```
+
+### 例外のスローを検証するテスト
+
+```ts
+// 引数には値ではなく、関数を入れる
+expect(() => add(-10, 110)).toThrow();
+
+// エラーメッセージが期待通りか検証
+test("引数が0~100の場合、例外をスローする", () => {
+  expect(() => add(110, -10)).toThrow("0~100の間で入力してください。");
+});
+```
+
+### instanceof 演算子による詳細な検証
+
+Error クラスを拡張したクラスを作る
+
+```ts
+export class HttpError extends Error {}
+export class RangeError extends Error {}
+
+if (err instanceof HttpError) {
+  // throw new HttpError("hoge") で入ってくる
+}
+if (err instanceof RangeError) {
+  // throw new RangeError("hoge") で入ってくる
+}
+```
+
+テストコード
+
+```ts
+expect(() => add(110, -10)).toThrow(RangeError);
+// スーパークラスなのでテストが通る
+expect(() => add(110, -10)).toThrow(Error);
+```
+
+### マッチャーの種類
+
+#### 真偽値の検証
+
+- toBeTruthy ... 真かどうか。
+- toBeFalthy ... 偽かどうか、null や undefined も通る。
+- toBeNull ... null かどうか
+- toBeUndefined ... undefined かどうか
+
+#### 数値の検証
+
+- toBe, toEqual ... 等しい
+- toBeGraterThan ... 期待値よりも大きい
+- toBeGraterThanOrEqual ... 期待値と等しいか大きい
+- toBeLessThan ... 期待値よりも小さい
+- toBeLessThanOrEqual ... 期待値と等しいか小さい
+
+#### 文字列の検証
+
+- toBe, toEqual ... 等しい
+- toContain ... 部分一致
+- toMatch ... 正規表現
+- toHaveLength ... 文字数の一致
+- stringContaining ... オブジェクト内の文字列の部分一致
+- stringMatching ... オブジェクト内の正規表現
+
+```ts
+expect(obj).toEqual({
+  message1: expect.stringContain("hoge");
+  message2: expect.stringMatching(/hoge/);
+});
+```
+
+#### 配列の検証
+
+- toContain ... 値が配列に含まれるか
+- toHaveLength ... 配列の長さ
+- toContainEqual ... 配列に引数で与えたオブジェクトが入っているかどうか
+- arrayContaining ... 引数に配列を与えて、それらが全て含まれているか
+
+#### オブジェクトの検証
+
+- toMatchObject ... 引数で指定した部分的にプロパティが一致するかどうか
+- toHaveProperty ... 引数で指定したプロパティが存在するかどうか
+
+完全一致は toEqual でやれば良い
