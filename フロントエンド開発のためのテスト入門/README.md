@@ -246,20 +246,29 @@ expect(obj).toEqual({
 
 ### 非同期処理のテスト
 
-何種類かある
+非同期処理のテストでは、**`async / await` を使わないと `return` が必要**になる。
+
+Jest の内部処理
+
+1. `test()` や `it()` の中の関数が呼ばれる
+2. その関数の**戻り値**が何かを確認
+3. **戻り値が Promise であれば、「非同期処理がある」と判断して完了まで待つ**
+4. それ以外（非 Promise）なら、すぐにテスト完了とみなす
 
 ```ts
 // thenを使った基本的なPromiseのテスト
 test("非同期処理のテスト", () => {
+  // テスト関数を同期的に書く場合はreturnする
+  // でないとundefined(void,つまり非Promise)と判断され、評価されず通ってしまう
   return wait(50).then((duration) => {
-    // テスト関数を同期的に書く場合はreturnする,でないと評価されず通ってしまう
     expect(duration).toBe(50);
   });
 });
 
 // resolvesマッチャを使ったテスト
 test("非同期処理のテスト", () => {
-  return exxpect(wait(50)).resolves.toBe(50); // テスト関数を同期的に書く場合はreturnする
+  // テスト関数を同期的に書く場合はreturnする
+  return exxpect(wait(50)).resolves.toBe(50);
 });
 
 // async/await + resolves
@@ -302,4 +311,53 @@ test("rejectの検証", async () => {
     expect(err).toBe(50);
   }
 });
+```
+
+## 第４章 モック
+
+モック ... テストしたいが、環境構築に時間がかかるものや、用意できないものの代替品として用意するもの
+
+モックを使用しないと、多くの場合、API からのデータ取得が失敗したケースの判定が難しい。
+
+| 用語               | 一言で言うと                   | 主な目的               |
+| ------------------ | ------------------------------ | ---------------------- |
+| **スタブ（Stub）** | **戻り値を差し替えるもの**     | **振る舞いを制御する** |
+| **スパイ（Spy）**  | **呼び出し状況を記録するもの** | **振る舞いを観察する** |
+
+### モジュールをスタブに置き換える
+
+```ts
+import { greet } from "./greet";
+test("jest.mockを使わない", () => {
+  expect(greet("Taro")).toBe("Hello, Taro");
+});
+
+// jest.mockを使うと、指定した関数の置き換えが行われる
+import { greet } from "./greet";
+jest.mock("./greet");
+test("jest.mockを使う", () => {
+  expect(greet("Taro")).toBe(undefined); // 関数が置き換えられているため、greet関数はundefinedを返す
+});
+
+// 内部実装をする
+import { greet } from "./greet";
+jest.mock("./greet", () => ({
+  sayGoodBye: (name: string) => `GoodBye, ${name}`,
+}));
+test("jest.mockを使い、仮実装をする", () => {
+  expect(greet("Taro")).toBe(GoodBye, Taro);
+});
+
+// 1つは本実装、1つは仮実装
+import { greet, sayGoodBye } from "./greet";
+jest.mock("./greet", () => ({
+  ...jest.requireActual("./greet"),
+  sayGoodBye: (name: string) => `GoodBye, ${name}`,
+}));
+```
+
+### ライブラリを置き換える
+
+```ts
+jest.mock("next/router", () => require("next-router-mock"));
 ```
