@@ -243,3 +243,63 @@ expect(obj).toEqual({
 - toHaveProperty ... 引数で指定したプロパティが存在するかどうか
 
 完全一致は toEqual でやれば良い
+
+### 非同期処理のテスト
+
+何種類かある
+
+```ts
+// thenを使った基本的なPromiseのテスト
+test("非同期処理のテスト", () => {
+  return wait(50).then((duration) => {
+    // テスト関数を同期的に書く場合はreturnする,でないと評価されず通ってしまう
+    expect(duration).toBe(50);
+  });
+});
+
+// resolvesマッチャを使ったテスト
+test("非同期処理のテスト", () => {
+  return exxpect(wait(50)).resolves.toBe(50); // テスト関数を同期的に書く場合はreturnする
+});
+
+// async/await + resolves
+test("非同期処理のテスト", async () => {
+  await expect(wait(50)).resolves.toBe(50);
+});
+
+// async/await
+test("非同期処理のテスト", async () => {
+  expect(await wait(50)).toBe(50);
+});
+```
+
+#### reject の検証
+
+```ts
+// catchメソッドにアサーションを書く
+test("rejectの検証", () => {
+  return timeout(50).catch((duration) => {
+    // テスト関数を同期的に書く場合はreturnする
+    expect(duration).toBe(50);
+  });
+});
+
+// rejectマッチャを使う
+test("rejectの検証", () => {
+  return expect(timeout(50)).rejects.toBe(50); // テスト関数を同期的に書く場合はreturnする
+});
+
+test("rejectの検証", async () => {
+  await expect(timeout(50)).rejects.toBe(50);
+});
+
+// try-catchを使う
+test("rejectの検証", async () => {
+  expect.assertions(1); // アサーションを1回することを期待する
+  try {
+    timeout(50);
+  } catch (err) {
+    expect(err).toBe(50);
+  }
+});
+```
