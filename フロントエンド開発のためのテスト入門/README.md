@@ -319,10 +319,10 @@ test("rejectの検証", async () => {
 
 モックを使用しないと、多くの場合、API からのデータ取得が失敗したケースの判定が難しい。
 
-| 用語               | 一言で言うと                   | 主な目的               |
-| ------------------ | ------------------------------ | ---------------------- |
-| **スタブ（Stub）** | **戻り値を差し替えるもの**     | **振る舞いを制御する** |
-| **スパイ（Spy）**  | **呼び出し状況を記録するもの** | **振る舞いを観察する** |
+| 用語               | 一言で言うと                             | 主な目的               |
+| ------------------ | ---------------------------------------- | ---------------------- |
+| **スタブ（Stub）** | **戻り値を差し替えるもの**               | **振る舞いを制御する** |
+| **スパイ（Spy）**  | **呼び出し（入出力）状況を記録するもの** | **振る舞いを観察する** |
 
 ### モジュールをスタブに置き換える
 
@@ -360,4 +360,86 @@ jest.mock("./greet", () => ({
 
 ```ts
 jest.mock("next/router", () => require("next-router-mock"));
+```
+
+### Web API のスタブ実装
+
+リクエスト成功
+
+```ts
+// jest.spyOn(対象のオブジェクト, 対象の関数);
+// spyOnで対象オブジェクトの対象の関数が何を返り値として返すかを設定する。
+// 以下の場合はFeaturesに存在するgetMyProfile関数が{id, email}のオブジェクトを返すという定義
+jest.spyOn(Features, getMyProfile).mockResolvedValueOnce({
+  id: hoge,
+  email: hoge,
+});
+await expect(getGreet()).resolves.toBe("Hello");
+```
+
+リクエスト失敗
+
+```ts
+jest.spyOn(Features, getMyProfile).mockRejectedValueOnce(httpError);
+await expect(getGreet()).rejects.toMatchObject({
+  err: { message: "internal server error" },
+});
+```
+
+モック生成関数を使った場合
+
+```ts
+// fixtures ディレクトリにあらかじめレスポンス用のデータを用意
+exporrt function mockGetMyArticles(status = 200) {
+  if(status > 299) {
+    return jest.spyOn(Features, "getMyArticles").mockRejectedValueOnce(httpError)
+  }
+  return jest.spyOn(Features, "getMyArticles").mockResoledValueOnce(getMyArticlesData)
+}
+
+test("テストが成功した時", () => {
+  mockGetMyArticles();
+})
+test("テストが失敗した時", () => {
+  mockGetMyArticles(500);
+})
+```
+
+### スパイ
+
+```ts
+test("スパイの使い方", () => {
+  const mockFn = jest.fn();
+  mockFn();
+  expect(mockFn).toBeCalled(); // mockFn関数が呼ばれたか
+  expect(mockFn).not.toBeCalled(); // mockFn関数が呼ばれていないか
+  expect(mockFn).toHaveBeenCalledTimes(1); // mock関数が1回呼ばれたか
+
+  function greet(message: string) {
+    mockFn(message);
+  }
+  greet("Hello")
+  expect(mockFn).toHaveBeenCalledWith("Hello"); // 引数がHelloで呼び出されたか
+}
+```
+
+### 時刻を設定する
+
+jest.useFakeTimers : Jest に偽のタイマーを使用するように指示
+jest.setSystemTime : 偽のタイマーで使用される現在システム時刻を設定
+jest.useRealTimers : Jest に真のタイマーを使用するように指示
+
+```ts
+describe("greetByTime", () => {
+  beforEach(() => {
+    jest.useFakeTimes();
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+  test("8時", () => {
+    jest.setSystemTime(new Date(2022, 7, 20, 8, 0, 0));
+    expect(greetByTime()).toBe("おはよう");
+  });
+});
 ```
